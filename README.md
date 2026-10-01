@@ -1,6 +1,12 @@
 # 🏠 Iconic Estates India
 ### *"Where Capital Meets Opportunity"*
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+![React](https://img.shields.io/badge/Frontend-React%2018-61dafb)
+![Node](https://img.shields.io/badge/API-Node.js%20%2B%20Express-339933)
+![FastAPI](https://img.shields.io/badge/Analytics-FastAPI-009688)
+![MySQL](https://img.shields.io/badge/Database-MySQL%208-4479a1)
+
 A full-stack Indian luxury real-estate platform: a customer-facing property portal, a passwordless customer account area, a role-based admin/CRM back office, a Node.js/Express REST API, a Python FastAPI analytics microservice, and a MySQL database — styled as a premium dark/gold design system.
 
 ---
@@ -23,6 +29,8 @@ A full-stack Indian luxury real-estate platform: a customer-facing property port
 - [Building for Production](#building-for-production)
 - [Security Notes](#security-notes)
 - [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
+- [License](#license)
 
 ---
 
@@ -105,16 +113,20 @@ iconic-estates-india/
 │   ├── gen_seed.py          # regenerates seed.sql
 │   └── seed.sql             # generated seed data
 │
-└── frontend/                # React (CRA) — public site + admin + customer portal
-    ├── public/images/       # experts/builders/property imagery
-    └── src/
-        ├── components/      # PropertyCard, FilterPanel, LeadForm, CompareBar, ...
-        ├── pages/            # HomePage, PropertiesPage, MarketPage, CalculatorPage, ...
-        │   ├── admin/        # AdminDashboard, AdminLeads, AdminProperties, ...
-        │   └── portal/       # CustomerLogin, CustomerPortal
-        ├── context/AuthContext.js
-        ├── services/         # api.js, wishlist.js, compare.js, recentlyViewed.js
-        └── config/company.js # centralized contact details
+├── frontend/                # React (CRA) — public site + admin + customer portal
+│   ├── public/images/       # experts/builders/property imagery
+│   └── src/
+│       ├── components/      # PropertyCard, FilterPanel, LeadForm, CompareBar, ...
+│       ├── pages/            # HomePage, PropertiesPage, MarketPage, CalculatorPage, ...
+│       │   ├── admin/        # AdminDashboard, AdminLeads, AdminProperties, ...
+│       │   └── portal/       # CustomerLogin, CustomerPortal
+│       ├── context/AuthContext.js
+│       ├── services/         # api.js, wishlist.js, compare.js, recentlyViewed.js
+│       └── config/company.js # centralized contact details
+│
+├── LICENSE
+├── SECURITY.md
+└── README.md
 ```
 
 ---
@@ -301,7 +313,8 @@ in `backend-node/server.js`.
 
 ## Security Notes
 
-Please review these before deploying publicly:
+Please review these before deploying publicly (the vulnerability-reporting
+process and a full production checklist are in **[SECURITY.md](SECURITY.md)**):
 
 - **CORS currently reflects any origin.** `backend-node/server.js` configures
   CORS with `origin: true`, which allows requests from *any* origin (with
@@ -355,3 +368,17 @@ number first, or add it via the admin panel.
 Run `database/schema.sql` first, then the `migration_*.sql` files in the order
 listed in [Getting Started](#1-database) — several depend on tables created by
 earlier migrations.
+
+---
+
+## Contributing
+
+Issues and pull requests are welcome. For larger changes please open an issue first, keep database
+migrations additive and in order, and never commit secrets (`.env` files, JWT secrets, SMTP
+passwords) or real customer data.
+
+---
+
+## License
+
+Released under the [MIT License](LICENSE) © 2026 Vaibhav Chauhan.
