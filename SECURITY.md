@@ -1,106 +1,52 @@
 # Security Policy
 
-## Supported Versions
+Iconic Estates India stores customer leads, contact details and uploaded documents (e.g. KYC, agreements). Security reports are taken seriously.
 
-Iconic Estates India is deployed as a single running platform rather than
-distributed as a versioned library, so security fixes are applied to the
-active deployment branch rather than backported across release lines.
+## Supported versions
 
-| Branch / Deployment          | Supported          |
-| ----------------------------- | ------------------ |
-| `main` (production)           | :white_check_mark: |
-| Active feature branches       | :white_check_mark: |
-| Archived / superseded forks   | :x:                |
+Only the latest commit on the `main` branch receives security fixes.
 
-If you're running a fork or an older snapshot, you're responsible for pulling
-in fixes yourself — please don't expect patches to be backported to it.
+## Reporting a vulnerability
 
-## Reporting a Vulnerability
+**Please do not open a public issue for security problems.**
 
-**Please do not open a public GitHub issue for security vulnerabilities.**
-This platform handles lead/customer personal data (names, mobile numbers,
-emails), admin credentials, uploaded documents, and OTP-based authentication —
-a public report before a fix ships can be enough for real misuse.
+1. Use GitHub's private reporting: **Security → Report a vulnerability** on this repository (preferred), or
+2. Email the maintainer, Vaibhav Chauhan, at `<your-email@example.com>` *(replace before publishing)*.
 
-Instead, report privately using one of the following:
+Please include a description, impact, steps to reproduce (endpoint, role, request/response) and a suggested fix if you have one. You can expect an acknowledgement within **7 days** and a status update within **14 days**. Please allow reasonable time for a fix before public disclosure.
 
-- **GitHub Private Vulnerability Reporting** — open the repository's
-  **Security** tab → **Report a vulnerability**, if enabled for this repo.
-- **Email** — send details to the maintainer's contact email listed on the
-  repository's GitHub profile / organization page.
+### In scope
+Admin/agent/customer privilege escalation, customer-portal OTP bypass, access to another customer's leads, messages or documents, JWT flaws, injection, insecure file upload/download, secrets exposure.
 
-When reporting, please include:
+### Out of scope
+Issues that exist only because development defaults were left in production (see checklist), denial of service by volume, social engineering, and flaws in third-party services (SMTP providers, hosting).
 
-- A description of the vulnerability and its potential impact.
-- Steps to reproduce (a minimal example is ideal).
-- Which component is affected — the React frontend, the Node/Express API
-  (`backend-node/`), the Python analytics service (`backend-python/`), or the
-  database schema/migrations.
-- Whether the issue requires authentication, and if so, which session type
-  (admin JWT or customer-portal OTP session) and role.
+## Security measures in the project
 
-### What to expect
+- Admin authentication with email + password (bcryptjs) and JWT; role-based access (`super_admin`, `admin`, `agent`).
+- Separate JWT flow for the customer portal (mobile OTP); customers can only access records tied to their own verified mobile number.
+- OTPs are 6 digits and valid for 10 minutes.
+- Helmet security headers and `express-rate-limit` (general API: 300 requests / 15 min; login: 10 requests / 10 min).
+- `.env` files are gitignored.
+- Least-privilege MySQL user recommended for production.
 
-- **Acknowledgement** within 3 business days of your report.
-- **Initial assessment** (severity and affected components) within 7 days.
-- **Status updates** at least every 7 days until the issue is resolved, more
-  frequently for high-severity reports.
-- **Resolution timeline** depends on severity:
-  - **Critical** (e.g. auth bypass, cross-customer data access, OTP bypass,
-    SQL injection, remote code execution): fix targeted within 7 days.
-  - **High** (e.g. privilege escalation between roles, CORS misconfiguration
-    exploited to steal admin sessions, unauthenticated data exposure): fix
-    targeted within 14 days.
-  - **Medium/Low** (e.g. missing hardening, rate-limit tuning, non-exploitable
-    misconfiguration): scheduled into the normal development cycle.
+## Production deployment checklist
 
-If a report is **accepted**, you'll be credited in the fix's changelog entry
-unless you ask to remain anonymous, and notified once the fix is deployed. If
-a report is **declined** (not reproducible, out of scope, or judged not to be
-a vulnerability), you'll get an explanation and are welcome to provide
-additional evidence for reconsideration.
+The repository ships with **development defaults**. Before going live:
 
-### Scope
+- [ ] **Fix CORS**: `backend-node/server.js` currently uses `origin: true` (any origin, with credentials). Replace it with an allowlist from `ALLOWED_ORIGINS`, and set `ALLOWED_ORIGINS` on the Python service too.
+- [ ] Set strong, **different** values for `JWT_SECRET` and `CUSTOMER_JWT_SECRET` (the customer secret falls back to `JWT_SECRET` if unset).
+- [ ] **Configure SMTP.** Without it, `request-otp` returns the OTP in the API response — an authentication bypass in production. Also gate the `dev_otp` field behind `NODE_ENV !== 'production'`.
+- [ ] Set `NODE_ENV=production`.
+- [ ] Change the bootstrap `ADMIN_PASSWORD` right after first login and remove or rotate it from `.env`.
+- [ ] Review upload validation in `backend-node/middleware/upload.js` (file type and size) — uploaded files are served statically from `/uploads`.
+- [ ] Use a dedicated MySQL user instead of `root`.
+- [ ] Serve everything over HTTPS; run the Node API under PM2/systemd/Docker and the FastAPI service under a production ASGI setup.
+- [ ] Review rate-limit thresholds for your traffic.
+- [ ] Check git history to confirm no `.env` file was ever committed; rotate secrets if it was.
+- [ ] Protect customer data according to applicable law (e.g. India's DPDP Act 2023).
 
-In scope:
-- Admin authentication and RBAC (`backend-node/middleware/auth.js`,
-  `routes/auth.js`) — including whether `admin`/`agent` accounts can reach
-  `super_admin`-only actions such as `POST /api/auth/register`
-- Customer-portal OTP authentication
-  (`backend-node/controllers/customerAuthController.js`,
-  `middleware/customerAuth.js`) — OTP brute-forcing, OTP reuse/replay, session
-  confusion between the admin JWT and the customer JWT, or one customer
-  accessing another customer's leads/inquiries/messages/documents
-- The Node REST API (`backend-node/routes/`, `controllers/`) — injection,
-  IDOR, mass assignment, broken access control
-- The Python FastAPI analytics service (`backend-python/`)
-- File upload handling (`backend-node/middleware/upload.js`) and the
-  `/uploads` static file route
-- CORS configuration in `backend-node/server.js` and the Python service
-- Outbound email handling (`backend-node/utils/mailer.js`) — e.g. header
-  injection via user-supplied fields
-- SQL injection, XSS, CSRF, and insecure direct object references anywhere in
-  the stack
+## Known limitations
 
-Out of scope:
-- Findings that require access to `.env` files or database credentials you
-  should not already have
-- Denial-of-service via raw traffic volume (report application-logic DoS —
-  e.g. an endpoint with no pagination limit — separately)
-- Social engineering against maintainers or users
-- Issues in third-party dependencies — please report those upstream, though a
-  link here is appreciated so we can track exposure
-
-### A note on this project's current security posture
-
-A few known gaps are documented in the
-[README's Security Notes](README.md#security-notes) rather than hidden:
-CORS currently reflects any request origin (`origin: true` in
-`backend-node/server.js`), the customer-portal JWT secret falls back to the
-admin JWT secret if not set separately, and OTP codes are returned directly in
-the API response when SMTP isn't configured (intended for local development
-only). These are known, tracked issues — you're welcome to report hardening
-suggestions or exploitation paths for them, but please reference the README
-section so reports aren't duplicated.
-
-Thank you for helping keep Iconic Estates India and its customers' data safe.
+- No automated test suite is documented yet.
+- The analytics service is called directly from the browser, so it must have its own CORS configuration.
