@@ -16,6 +16,7 @@ A full-stack Indian luxury real-estate platform: a customer-facing property port
 - [Features](#features)
 - [Tech Stack](#tech-stack)
 - [Architecture](#architecture)
+- [Project Demo](#Project-Demo)
 - [Project Structure](#project-structure)
 - [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
@@ -87,6 +88,12 @@ A full-stack Indian luxury real-estate platform: a customer-facing property port
 
 <img width="7110" height="4500" alt="diagram" src="https://github.com/user-attachments/assets/716a46c9-0b1e-452f-a2af-5a316bf4d54e" />
 
+
+---
+
+## Project Demo
+
+👉 **[Watch the Demo Video](https://ireel.today/v/bb41c5f3fb)**
 
 ---
 
